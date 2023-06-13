@@ -14,11 +14,18 @@ import 'xe-utils'
 
 import SvgIcon from '@/components/svg-icon'
 
+import EditTableColumn from '@/components/custom/custom-edit-column'
+import CustomInput from '@/components/custom/custom-input'
+import FastTable from '@/components/custom/fast-table'
+
 
 registerStore()
 
 createApp(App)
 .use(router)
+.component("custom-edit-column",EditTableColumn)
+.component("custom-input", CustomInput)
+.component("fast-table", FastTable)
 .use(i18n)
 .use(ElementPlus)
 .use(SvgIcon)

@@ -1,23 +1,26 @@
 import { ITheme } from '@/store/theme/interface'
 import cache from '@/utils/cache'
-import { Action, Module, VuexModule, getModule } from 'vuex-module-decorators'
+import { Action, Module, VuexModule, getModule, Mutation } from 'vuex-module-decorators'
 import { sysStore } from '../sysStore'
 
 @Module({ dynamic: true, namespaced: true, name: 'app', store: sysStore })
 export class AppStore extends VuexModule {
 
 	mTheme = cache.getTheme()
+	mSidebarOpened = cache.getSidebarOpened()
+	mLanguage = cache.getLanguage()
+	mComponentSize = cache.getComponentSize()
 
 	get sidebarOpened() {
-		return cache.getSidebarOpened()
+		return this.mSidebarOpened
 	}
 
 	get language() {
-		return cache.getLanguage()
+		return this.mLanguage
 	}
 
 	get componentSize() {
-		return cache.getComponentSize()
+		return this.mComponentSize
 	}
 
 	get dictList() {
@@ -25,37 +28,40 @@ export class AppStore extends VuexModule {
 	}
 
 	get theme() {
-		console.log("theme", this.mTheme)
 		return this.mTheme
 	}
 
-	@Action
+	@Mutation
 	setSidebarOpened() {
-		cache.setSidebarOpened(!this.sidebarOpened)
+		this.mSidebarOpened = !this.mSidebarOpened
+		cache.setSidebarOpened(!this.mSidebarOpened)
 	}
 
-	@Action
+	@Mutation
 	setSidebarStatus(status: boolean) {
+		this.mSidebarOpened = status
 		cache.setSidebarOpened(status)
 	}
 
-	@Action
+	@Mutation
 	setLanguage(local: string) {
+		this.mLanguage = local
 		cache.setLanguage(local)
 	}
 
-	@Action
+	@Mutation
 	setComponentSize(size: string) {
+		this.mComponentSize = size
 		cache.setComponentSize(size)
 	}
 
-	@Action
+	@Mutation
 	setTheme(theme: ITheme) {
 		this.mTheme = theme
 		cache.setTheme(theme)
 	}
 
-	@Action
+	@Mutation
 	async getDictListAction() {
 
 	}

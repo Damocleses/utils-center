@@ -1,1 +1,2 @@
-export * from './contextTemplateModel';
+export * from './contextTemplateContent';
+export * from './contextTemplate';

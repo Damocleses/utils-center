@@ -3,4 +3,5 @@ export enum InputTypeEnum {
     text = 'text',
     date = 'date',
     dropdown = 'dropdown',
+    json = 'textarea',
 }

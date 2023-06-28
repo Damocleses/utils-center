@@ -1,5 +1,5 @@
 <template>
-    <el-input v-if="checkType('input')" :type="inputConfig.type" v-model="value"></el-input>
+    <el-input v-if="checkType('input')" :type="inputConfig.type" v-model="value" :autosize="{ minRows: 4, maxRows: 10 }"></el-input>
     <el-select v-else-if="checkType('dropdown')" v-model="value" placeholder="Select" >
     <el-option
       v-for="item in inputConfig.dataList"
@@ -15,7 +15,8 @@ import { computed } from '@vue/reactivity';
 
 const inputTypes = [
     InputTypeEnum.text,
-    InputTypeEnum.number
+    InputTypeEnum.number,
+    InputTypeEnum.json
 ]
 
 // const props = defineProps({

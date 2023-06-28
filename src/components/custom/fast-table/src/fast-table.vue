@@ -1,4 +1,5 @@
 <template>
+        <el-form :model="form">
     <el-table
         :data="dataList"
         style="width: 100%; margin-bottom: 20px"
@@ -16,24 +17,33 @@
         <el-table-column v-for="column in columnList" :label="column.label" :prop="column.prop" sortable>
           <template #default="scope">
             <template v-if="!editable || !column.options || column.options.editable == false || currentKey !=scope.row.rowIndex">
-              {{ scope.row[column.prop] }}
+              <div v-if="!!column.options && !!column.options.inputConfig && column.options.inputConfig.type == InputTypeEnum.json" v-html="scope.row[column.prop]" style="white-space: pre-wrap;"></div>
+              <div v-else>{{ scope.row[column.prop]  }}</div>
             </template>
             <template v-else>
-              <custom-input v-model="scope.row[column.prop]" :inputConfig="column.options.inputConfig"></custom-input>
+              <el-form-item>
+                <custom-input v-model="form[column.prop]" :inputConfig="column.options.inputConfig"></custom-input>
+              </el-form-item>
             </template>
           </template>
         </el-table-column>
         <el-table-column label="操作" v-if="!!tableConfig && !!tableConfig.opType && tableConfig.opType != OperateTypeEnum.None">
           <template #default="scope">
-                <a href="javascript:void(0);" style="color:green" @click="addChildren(scope.row)"  v-if="tableConfig.opType == OperateTypeEnum.AddChildren">添加下级</a>
-                <a href="javascript:void(0);" style="color:green" @click="$emit('edit',scope.row)"  v-if="tableConfig.opType == OperateTypeEnum.Edit">编辑</a>
-                <a href="javascript:void(0);" style="color:red; margin-left: 8px;" @click="removeRow(scope.row.Id)">删除</a>
+            <div class="buttonGroup">
+                <a href="javascript:void(0);"  @click.stop="handleEvent('addChildren', scope.row, addChildren(scope.row))"  v-if="isShowButton(scope.row, 'addChildren')">添加下级</a>
+                <a href="javascript:void(0);"  @click.stop="handleEvent('edit', scope.row)"  v-if="isShowButton(scope.row, 'edit')">编辑</a>
+                <a href="javascript:void(0);"  class="red" @click="handleEvent('delete', scope.row, removeRow(scope.row.Id))" v-if="isShowButton(scope.row, 'delete')">删除</a>
+                <a href="javascript:void(0);"  @click.stop="handleEvent('save', scope.row, saveRow(scope.row))" v-if="isShowButton(scope.row, 'save')">保存</a>
+                <a href="javascript:void(0);"  @click.stop="handleEvent('cancel', scope.row, cancel());"  v-if="isShowButton(scope.row, 'cancel')">取消</a>
+            </div>
           </template>
         </el-table-column>
       </el-table>
+    </el-form>
 </template>
 <script setup lang="ts">
-import { computed, ref } from '@vue/reactivity';
+import { InputTypeEnum } from '@/models';
+import { computed, ref, reactive } from '@vue/reactivity';
 import { TableInstance } from 'element-plus';
 import { PropType } from 'vue';
 import { OperateTypeEnum, TableConfig } from '../models/fast-table-config';
@@ -74,13 +84,50 @@ const dataList = computed({
   }
 })
 
+const form = reactive({} as any)
 
 let currentKey = ref<number>(-1)
 const table = ref<TableInstance>();
 
+const isShowButton = (data: any, type: string) => {
+  switch(type) {
+    case 'addChildren':
+      return props.tableConfig?.opType == OperateTypeEnum.AddChildren;
+    case 'edit':
+    case 'delete':
+      return props.tableConfig?.opType == OperateTypeEnum.Edit && data.rowIndex != currentKey.value;
+    case 'save':
+    case 'cancel':
+      return props.tableConfig?.opType == OperateTypeEnum.Edit && data.rowIndex == currentKey.value;
+    default:
+      return false;
+  }
+}
+
+const handleEvent = (event: any, data: any, action?: any) => {
+  if (props.tableConfig?.emitEvent?.includes(event)) {
+    emit(event, data)
+    return
+  }
+
+  if (!!action) {
+    action()
+  }
+}
+
+const cancel = () => {
+  console.log('cancel')
+  currentKey.value = -1;
+}
+
 const rowClick = (r: any, c: any, e: any) => {
-  console.log('rowclick:', r.rowIndex)
-  currentKey.value = r.rowIndex
+  if (!props.tableConfig?.editable) {
+    return;
+  }
+  console.log('rowclick:', r.rowIndex);
+  currentKey.value = r.rowIndex;
+  Object.assign(form, r);
+  console.log('form:', form);
 }
 
 const addChildren = (row: any) => {
@@ -100,6 +147,11 @@ const addChildren = (row: any) => {
 
 const removeRow = (id: string) => {
   dataList.value = removeChild(dataList.value, id)
+}
+
+const saveRow = (data: any) => {
+  Object.assign(data, form);
+  cancel();
 }
 
 const removeChild = (dataArr: any[], id: string): any[] => {
@@ -128,3 +180,17 @@ const rowStyle = (e: any) => {
 }
 
 </script>
+
+<style lang="scss">
+.buttonGroup > *{
+  &:not(:first-child) {
+    margin-left: 8px;
+  }
+
+  color: green;
+  &.red {
+    color: red;
+  }
+}
+
+</style>
